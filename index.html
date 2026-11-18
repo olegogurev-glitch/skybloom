@@ -1050,7 +1050,7 @@ function update(dt) {
   inDraft = nowDraft;
   P.y += P.vy * dt;
   const feet = P.y + P.r;
-  if (!P.dead && P.vy > 0 && state !== 'dying') {
+  if (!P.dead && P.vy > 0 && (state === 'play' || state === 'menu')) {   // no landings once the run is over
     if (prevFeet <= 0.5 && feet >= 0 && -camY > -40) { P.y = -P.r; land(null); }
     else if (state === 'play') {   // in the menu Pip only bounces on the meadow
       for (const p of plats) {
