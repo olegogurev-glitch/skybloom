@@ -1249,7 +1249,9 @@ function update(dt) {
   }
 
   // danger: falling into the bottom of the screen -> pulse the bloom button, tint the edge
-  const low = playing && !P.dead && P.vy > 0 && (P.y - camY) > H * 0.72;
+  // (not while the meadow is still on screen: Pip can't fall past it, so there's no danger yet)
+  const meadowOnScreen = -camY < H;
+  const low = playing && !P.dead && P.vy > 0 && (P.y - camY) > H * 0.72 && !meadowOnScreen;
   dangerK = lerp(dangerK, low ? 1 : 0, 1 - Math.exp(-10 * dt));
   const urge = low && charges > 0;
   if (urge !== urgeOn) {
