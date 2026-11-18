@@ -110,23 +110,30 @@
   .tobest .bar{height:6px;border-radius:6px;background:rgba(255,255,255,.18);overflow:hidden;margin:0 auto 6px;width:190px}
   .tobest .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#7deccb,#ff8fc8)}
   /* phone buttons: half-transparent glass, like other mobile games */
-  #pad{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;align-items:center;
-    justify-content:space-between;padding:0 16px;pointer-events:none}
+  /* The whole bottom strip is touch area, split in three: left third steers left, right third steers
+     right, the middle grows a flower. The glass buttons just show where; a thumb near one still counts. */
+  #pad{position:absolute;left:0;right:0;bottom:0;height:calc(env(safe-area-inset-bottom,0px) + 168px);display:grid;
+    grid-template-columns:34% 32% 34%;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);box-sizing:border-box;
+    pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
   #pad[hidden]{display:none}
-  .padBtn{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
-    -webkit-tap-highlight-color:transparent;display:grid;place-items:center;padding:0;color:#fff;cursor:pointer;
+  #hud.hidden #pad{pointer-events:none}
+  .padZone{display:flex;align-items:flex-end;justify-content:center}
+  .padZone.l{justify-content:flex-start;padding-left:12px}
+  .padZone.r{justify-content:flex-end;padding-right:12px}
+  .padBtn{pointer-events:none;display:grid;place-items:center;color:#fff;
     border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.17);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
     box-shadow:0 4px 18px rgba(20,10,60,.18),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .08s,background .12s,box-shadow .12s}
-  .padBtn.round{width:78px;height:78px;border-radius:50%}
-  .padBtn.round svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;
+  .padBtn.round{width:100px;height:100px;border-radius:50%}
+  .padBtn.round svg{width:44px;height:44px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;
     filter:drop-shadow(0 1px 3px rgba(20,10,60,.4))}
-  .padBtn.rect{width:132px;height:64px;border-radius:20px}
+  .padBtn.rect{width:min(100%,140px);height:84px;border-radius:24px;box-sizing:border-box}
   .padBtn.down{transform:scale(.92);background:rgba(255,255,255,.4);box-shadow:0 0 24px rgba(255,255,255,.4),inset 0 1px 0 rgba(255,255,255,.55)}
   .padBtn.off{opacity:.35}
-  #hud.hidden .padBtn{pointer-events:none}
+  @media (max-width:360px){.padBtn.round{width:88px;height:88px}.padBtn.round svg{width:38px;height:38px}}
   /* inside the middle button the flower charges lose their own pill */
   #padB #bloomBar{position:static;transform:none;opacity:1;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;gap:6px}
-  #padB .slot{width:30px;height:30px;background:rgba(255,255,255,.14)}
+  #padB .slot{width:32px;height:32px;background:rgba(255,255,255,.14)}
+  #padB #charges{gap:4px}
   #padB .slot svg{width:21px;height:21px}
   #padB #meter{height:4px}
   .ctrlSwitch{pointer-events:auto;margin-top:26px;display:flex;align-items:center;gap:6px;padding:5px;border-radius:999px;
@@ -174,9 +181,9 @@
     </div>
     <!-- phone controls: hold ◀ ▶ to steer, the middle button grows a flower (holds the flower charges) -->
     <div id="pad" hidden>
-      <button class="padBtn round" id="padL" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
-      <button class="padBtn rect" id="padB" aria-label="Grow a flower"></button>
-      <button class="padBtn round" id="padR" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+      <div class="padZone l"><div class="padBtn round" id="padL" role="button" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></div></div>
+      <div class="padZone b"><div class="padBtn rect" id="padB" role="button" aria-label="Grow a flower"></div></div>
+      <div class="padZone r"><div class="padBtn round" id="padR" role="button" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></div></div>
     </div>
   </div>
 
@@ -2151,28 +2158,37 @@ function setControls(mode) {
   document.getElementById('chipSteer').innerHTML = T(c[1]);
   document.getElementById('chipBloom').innerHTML = T(c[2]);
 }
-// a button that counts as held while any finger is on it (several fingers can work at once)
-function holdButton(el, onDown, onUp) {
-  const fingers = new Set();
-  el.addEventListener('pointerdown', e => {
-    e.preventDefault(); e.stopPropagation(); audioInit();
-    try { el.setPointerCapture(e.pointerId); } catch (err) {}
-    const first = !fingers.size;
-    fingers.add(e.pointerId); el.classList.add('down');
-    if (first) { onDown(); buzz(6); }
-  });
-  const up = e => {
-    if (!fingers.delete(e.pointerId) || fingers.size) return;
-    el.classList.remove('down');
-    if (onUp) onUp();
-  };
-  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, up);
-  el.addEventListener('contextmenu', e => e.preventDefault());
+// One handler for the whole strip. Each finger belongs to a zone: 'l', 'b' (flower) or 'r'. A finger
+// on an arrow keeps steering when it drifts over the middle and switches direction when it reaches
+// the other arrow; a finger that starts on the flower and rolls onto an arrow starts steering.
+// Only a fresh press on the middle grows a flower. Several fingers work at once.
+const padL = document.getElementById('padL'), padR = document.getElementById('padR');
+const padFingers = new Map();
+const padZone = x => { const r = pad.getBoundingClientRect(), f = (x - r.left) / r.width; return f < 0.34 ? 'l' : f > 0.66 ? 'r' : 'b'; };
+function applyPad() {
+  const zones = [...padFingers.values()];
+  keys.l = zones.includes('l'); keys.r = zones.includes('r');
+  padL.classList.toggle('down', keys.l); padR.classList.toggle('down', keys.r);
+  padB.classList.toggle('down', zones.includes('b'));
 }
-holdButton(document.getElementById('padL'), () => { keys.l = true; }, () => { keys.l = false; });
-holdButton(document.getElementById('padR'), () => { keys.r = true; }, () => { keys.r = false; });
-holdButton(padB, () => tryBloom());
-function releasePad() { keys.l = keys.r = false; for (const b of pad.querySelectorAll('.down')) b.classList.remove('down'); }
+pad.addEventListener('pointerdown', e => {
+  e.preventDefault(); audioInit();
+  try { pad.setPointerCapture(e.pointerId); } catch (err) {}
+  const z = padZone(e.clientX);
+  padFingers.set(e.pointerId, z);
+  if (z === 'b') tryBloom();
+  buzz(6); applyPad();
+});
+pad.addEventListener('pointermove', e => {
+  const was = padFingers.get(e.pointerId);
+  if (!was) return;
+  const z = padZone(e.clientX);
+  if (z !== was && z !== 'b') { padFingers.set(e.pointerId, z); applyPad(); }
+});
+const padUp = e => { if (padFingers.delete(e.pointerId)) applyPad(); };
+for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(ev, padUp);
+pad.addEventListener('contextmenu', e => e.preventDefault());
+function releasePad() { padFingers.clear(); applyPad(); }
 let barActiveT = 0;
 function wakeBar(t) { barActiveT = Math.max(barActiveT, t); bloomBar.classList.add('active'); }
 const bannerEl = document.getElementById('banner');
@@ -2193,7 +2209,7 @@ function setPaused(on) {
   if (on && state !== 'play') return;
   paused = on;
   pauseEl.classList.toggle('hidden', !on);
-  ptrs.clear(); keys.l = keys.r = false;
+  ptrs.clear(); keys.l = keys.r = false; releasePad();
   if (actx) { if (on) actx.suspend(); else actx.resume(); }
 }
 document.getElementById('pauseBtn').addEventListener('pointerdown', e => e.stopPropagation());

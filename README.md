@@ -14,7 +14,7 @@ Open <http://localhost:5391>. Any static host works.
 
 ## Controls
 
-- **Phones and tablets:** three half-transparent buttons along the bottom: hold ◀ or ▶ to steer, press the middle button (which shows the flower charges) to grow a rescue flower. The pause screen switches to dragging (drag anywhere to steer, tap to bloom) and back.
+- **Phones and tablets:** three half-transparent buttons along the bottom: hold ◀ or ▶ to steer, press the middle button (which shows the flower charges) to grow a rescue flower. The whole bottom strip is touch area (left third, middle, right third), so a thumb near a button still counts; a thumb on an arrow can slide to the other arrow to change direction. The pause screen switches to dragging (drag anywhere to steer, tap to bloom) and back.
 - **Keyboard:** ← → or A D to steer, Space to bloom, Esc or P to pause. Mouse: drag to steer, click to bloom.
 
 ## URL options
