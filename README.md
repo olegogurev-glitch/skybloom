@@ -12,6 +12,11 @@ python3 -m http.server 5391
 
 Open <http://localhost:5391>. Any static host works.
 
+## Controls
+
+- **Phones and tablets:** three half-transparent buttons along the bottom: hold ◀ or ▶ to steer, press the middle button (which shows the flower charges) to grow a rescue flower. The pause screen switches to dragging (drag anywhere to steer, tap to bloom) and back.
+- **Keyboard:** ← → or A D to steer, Space to bloom, Esc or P to pause. Mouse: drag to steer, click to bloom.
+
 ## URL options
 
 | Option | What it does |
@@ -29,6 +34,7 @@ Open <http://localhost:5391>. Any static host works.
 | `skybloom.daily` | `{ day, best }` for today's challenge |
 | `skybloom.stats` | Lifetime totals: `runs`, `metres`, `seeds`, `perfects`, `rushes`, `vines`, `stomps`, `shields`, `blooms`, `dailies`, `bestAlt`, `bestCombo`, `zone` (0–4) |
 | `skybloom.muted` | Sound off on this device (a setting, not progress) |
+| `skybloom.controls` | `buttons` or `drag` on touch screens (a setting, not progress) |
 
 ## Pixo
 

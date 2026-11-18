@@ -109,6 +109,33 @@
   .tobest{margin-top:14px;font-size:13px;font-weight:600;opacity:.9}
   .tobest .bar{height:6px;border-radius:6px;background:rgba(255,255,255,.18);overflow:hidden;margin:0 auto 6px;width:190px}
   .tobest .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#7deccb,#ff8fc8)}
+  /* phone buttons: half-transparent glass, like other mobile games */
+  #pad{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;align-items:center;
+    justify-content:space-between;padding:0 16px;pointer-events:none}
+  #pad[hidden]{display:none}
+  .padBtn{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;display:grid;place-items:center;padding:0;color:#fff;cursor:pointer;
+    border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.17);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    box-shadow:0 4px 18px rgba(20,10,60,.18),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .08s,background .12s,box-shadow .12s}
+  .padBtn.round{width:78px;height:78px;border-radius:50%}
+  .padBtn.round svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;
+    filter:drop-shadow(0 1px 3px rgba(20,10,60,.4))}
+  .padBtn.rect{width:132px;height:64px;border-radius:20px}
+  .padBtn.down{transform:scale(.92);background:rgba(255,255,255,.4);box-shadow:0 0 24px rgba(255,255,255,.4),inset 0 1px 0 rgba(255,255,255,.55)}
+  .padBtn.off{opacity:.35}
+  #hud.hidden .padBtn{pointer-events:none}
+  /* inside the middle button the flower charges lose their own pill */
+  #padB #bloomBar{position:static;transform:none;opacity:1;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;gap:6px}
+  #padB .slot{width:30px;height:30px;background:rgba(255,255,255,.14)}
+  #padB .slot svg{width:21px;height:21px}
+  #padB #meter{height:4px}
+  .ctrlSwitch{pointer-events:auto;margin-top:26px;display:flex;align-items:center;gap:6px;padding:5px;border-radius:999px;
+    background:rgba(255,255,255,.14);font-weight:600;font-size:14px}
+  .ctrlSwitch[hidden]{display:none}
+  .ctrlSwitch span{padding:0 8px 0 10px;opacity:.85}
+  .ctrlSwitch button{border:0;border-radius:999px;padding:8px 14px;font:600 14px 'Fredoka','Nunito',system-ui,sans-serif;color:#fff;
+    background:transparent;cursor:pointer}
+  .ctrlSwitch button.on{background:#fff;color:#6a2c7e}
   .dailychip{margin-top:10px;padding:5px 12px;border-radius:999px;font-weight:700;font-size:13px;color:#5a2470;
     background:linear-gradient(90deg,#ffd34d,#ff9fd0);box-shadow:0 4px 14px rgba(90,40,140,.3)}
   .tapany{margin-top:14px;font-size:13px;font-weight:600;opacity:.7}
@@ -140,10 +167,16 @@
       </div>
     </div>
     <div id="banner"><small id="bannerSub" data-t>Now entering</small><span id="bannerText"></span></div>
-    <div id="hint" data-t>Drag to steer · Tap to bloom a flower</div>
+    <div id="hint">Drag to steer · Tap to bloom a flower</div>
     <div class="bottom" id="bloomBar">
       <div id="charges"></div>
       <div id="meter"><i></i></div>
+    </div>
+    <!-- phone controls: hold ◀ ▶ to steer, the middle button grows a flower (holds the flower charges) -->
+    <div id="pad" hidden>
+      <button class="padBtn round" id="padL" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+      <button class="padBtn rect" id="padB" aria-label="Grow a flower"></button>
+      <button class="padBtn round" id="padR" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
     </div>
   </div>
 
@@ -153,8 +186,8 @@
     <div class="dailychip" id="dailyChip" style="display:none"></div>
     <button class="btn" id="playBtn" data-t>Play</button>
     <div class="howto">
-      <div><span class="ic">👆</span><span data-t><b>Drag</b> to steer</span></div>
-      <div><span class="ic">🌸</span><span data-t><b>Tap</b> to bloom a rescue flower</span></div>
+      <div><span class="ic">👆</span><span id="chipSteer"><b>Drag</b> to steer</span></div>
+      <div><span class="ic">🌸</span><span id="chipBloom"><b>Tap</b> to bloom a rescue flower</span></div>
       <div><span class="ic">💧</span><span data-t>Land on the <b>dewdrop</b> for Perfects</span></div>
     </div>
     <div class="best" id="menuBest"></div>
@@ -164,6 +197,7 @@
     <h2 data-t>Paused</h2>
     <button class="btn" id="resumeBtn" data-t>Resume</button>
     <div class="tapany" data-t>or tap anywhere</div>
+    <div class="ctrlSwitch" id="ctrlSwitch" hidden><span data-t>Controls</span><button type="button" data-mode="buttons" data-t>Buttons</button><button type="button" data-mode="drag" data-t>Drag</button></div>
   </div>
 
   <div id="over" class="overlay hidden">
@@ -255,6 +289,11 @@ const RU = {
   '{n} m short of your best': 'До рекорда {n} м',
   'Play again': 'Ещё раз', 'or tap anywhere': 'или тапни в любом месте',
   'Paused': 'Пауза', 'Resume': 'Продолжить',
+  'Controls': 'Управление', 'Buttons': 'Кнопки', 'Drag': 'Свайп',
+  'Hold ◀ ▶ to steer · Middle button: flower': 'Держи ◀ ▶ — рули · Кнопка в центре — цветок',
+  '<b>Hold ◀ ▶</b> to steer': '<b>Держи ◀ ▶</b>, чтобы рулить',
+  '<b>Middle button</b> grows a rescue flower': '<b>Кнопка в центре</b> — спасательный цветок',
+  'Press the flower button!': 'Жми кнопку с цветком!',
   'm': 'м',
   'Perfect!': 'Идеально!', 'Perfect ×{n}': 'Идеально ×{n}', 'combo lost': 'серия прервана',
   '+1 Bloom': '+1 цветок', 'Tap to bloom!': 'Тапни — цветок!', 'Stomp!': 'Бум!',
@@ -891,6 +930,7 @@ function die() {
 }
 // falling off the bottom: a beat of slow motion while the camera follows Pip down into the distance
 function startDying() {
+  if (typeof releasePad === 'function') releasePad();
   state = 'dying'; deathT = 0;
   sfx.fall(); musicDuck(true);
   hud.classList.add('hidden');
@@ -1215,7 +1255,7 @@ function update(dt) {
   if (urge !== urgeOn) {
     urgeOn = urge; chargesEl.classList.toggle('urge', urge);
     bloomBar.classList.toggle('active', urge || barActiveT > 0);
-    if (urge && !bloomTaught) { bloomTaught = true; pop(P.x, P.y - 40, T('Tap to bloom!'), '#ffb3df', 19); }
+    if (urge && !bloomTaught) { bloomTaught = true; pop(P.x, P.y - 40, T(padOn ? 'Press the flower button!' : 'Tap to bloom!'), '#ffb3df', 19); }
   }
 
   // death by falling
@@ -2091,6 +2131,46 @@ const chargesEl = document.getElementById('charges');
 const meterEl = document.querySelector('#meter i');
 const hintEl = document.getElementById('hint');
 const bloomBar = document.getElementById('bloomBar');
+// ---- phone buttons (default on touch screens; the pause screen switches to dragging and back) ----
+const pad = document.getElementById('pad'), padB = document.getElementById('padB');
+const TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
+let padOn = false;
+function setControls(mode) {
+  padOn = mode === 'buttons' && TOUCH && !BOT;
+  pad.hidden = !padOn;
+  if (padOn) padB.appendChild(bloomBar); else hud.appendChild(bloomBar);
+  padB.classList.toggle('off', TWIST === 'petalless');
+  keys.l = keys.r = false;
+  for (const b of document.querySelectorAll('.ctrlSwitch button')) b.classList.toggle('on', b.dataset.mode === (padOn ? 'buttons' : 'drag'));
+  const c = padOn
+    ? ['Hold ◀ ▶ to steer · Middle button: flower', '<b>Hold ◀ ▶</b> to steer', '<b>Middle button</b> grows a rescue flower']
+    : ['Drag to steer · Tap to bloom a flower', '<b>Drag</b> to steer', '<b>Tap</b> to bloom a rescue flower'];
+  hintEl.innerHTML = T(c[0]);
+  document.getElementById('chipSteer').innerHTML = T(c[1]);
+  document.getElementById('chipBloom').innerHTML = T(c[2]);
+}
+// a button that counts as held while any finger is on it (several fingers can work at once)
+function holdButton(el, onDown, onUp) {
+  const fingers = new Set();
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation(); audioInit();
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    const first = !fingers.size;
+    fingers.add(e.pointerId); el.classList.add('down');
+    if (first) { onDown(); buzz(6); }
+  });
+  const up = e => {
+    if (!fingers.delete(e.pointerId) || fingers.size) return;
+    el.classList.remove('down');
+    if (onUp) onUp();
+  };
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, up);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+holdButton(document.getElementById('padL'), () => { keys.l = true; }, () => { keys.l = false; });
+holdButton(document.getElementById('padR'), () => { keys.r = true; }, () => { keys.r = false; });
+holdButton(padB, () => tryBloom());
+function releasePad() { keys.l = keys.r = false; for (const b of pad.querySelectorAll('.down')) b.classList.remove('down'); }
 let barActiveT = 0;
 function wakeBar(t) { barActiveT = Math.max(barActiveT, t); bloomBar.classList.add('active'); }
 const bannerEl = document.getElementById('banner');
@@ -2100,6 +2180,13 @@ const overEl = document.getElementById('over');
 const muteBtn = document.getElementById('mute');
 // ---- pause ----
 const pauseEl = document.getElementById('pause');
+const ctrlSwitch = document.getElementById('ctrlSwitch');
+ctrlSwitch.hidden = !TOUCH;
+ctrlSwitch.addEventListener('click', e => {
+  e.stopPropagation();   // choosing controls doesn't resume the game
+  const b = e.target.closest('button'); if (!b) return;
+  setControls(b.dataset.mode); store('skybloom.controls', b.dataset.mode);
+});
 function setPaused(on) {
   if (on && state !== 'play') return;
   paused = on;
@@ -2185,6 +2272,7 @@ const ptrs = new Map();
 cvs.addEventListener('pointerdown', e => {
   audioInit();
   e.preventDefault();
+  if (padOn) return;   // the on-screen buttons do the steering
   try { cvs.setPointerCapture(e.pointerId); } catch (err) {}
   ptrs.set(e.pointerId, { x: e.clientX, sx: e.clientX, sy: e.clientY, t: performance.now(), moved: 0 });
   if (ptrs.size >= 2) { tryBloom(); for (const p of ptrs.values()) p.moved = 999; }
@@ -2264,6 +2352,7 @@ resize();
 reset();
 setMenuBest();
 applyLanguage();
+{ let mode = null; try { mode = localStorage.getItem('skybloom.controls'); } catch (e) {} setControls(mode || (TOUCH ? 'buttons' : 'drag')); }
 if (TWIST === 'petalless') bloomBar.style.display = 'none';
 if (DAILY) {
   const chip = document.getElementById('dailyChip');
