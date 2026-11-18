@@ -593,6 +593,7 @@ const P = { x: W / 2, y: -20, r: 20, vx: 0, vy: 0, vxv: 0, sq: 0, sqV: 0, rot: 0
 let trail = [], trailT = 0;
 let deathT = 0;
 let paused = false;
+let GOD = false;   // #debug only (__sky.god()): brambles can't hurt Pip, for clean screenshots
 let state = 'menu', time = 0, camY = 0, camY0 = 0, shake = 0;
 let plats = [], seeds = [], brambles = [], parts = [], pops = [];
 let genY = 0, seedsN = 0, charges = 1, meter = 0, combo = 0, bestCombo = 0, maxAlt = 0, biomeIdx = 0, overT = 0;
@@ -1135,12 +1136,12 @@ function update(dt) {
     if (!P.dead && playing) {
       const dx = P.x - b.x, dy = P.y - b.y;
       if (dx * dx + dy * dy < (P.r + 12) * (P.r + 12)) {
-        if (vineT > 0 || shield > 0) {
+        if (vineT > 0 || shield > 0 || GOD) {
           // riding the vine smashes brambles; a petal shield absorbs one hit
           b.alive = false; sfx.stomp(); shake = 5; hitstop = 0.07;
           ring(b.x, b.y, '210,170,255', 50);
           burst(b.x, b.y, 18, { speed: [60, 240], life: [0.4, 0.9], size: [3, 6], col: ['#4a2368', '#8e55b8', '#c9a4ea'], g: 400 });
-          if (vineT <= 0) {
+          if (vineT <= 0 && !GOD) {
             shield = 0; sfx.shieldBreak(); run.shields++; pop(P.x, P.y - 36, T('Shield saved you!'), '#ffc2e6', 17);
             burst(P.x, P.y, 16, { speed: [80, 220], life: [0.6, 1.1], size: [5, 9], col: ['#ff9bd2', '#ffd6ec'], kind: 'petal', g: 200, drag: 1.2 });
             if (P.vy > -500) jump(JUMP * 0.8);
@@ -2248,6 +2249,8 @@ if (location.hash === '#debug') {
       fillWorld(); hudDirty = true;
     },
     drop() { plats = []; },
+    god(on = true) { GOD = on; },
+    restart() { startGame(true); },
     give(kind) { pickups.push({ kind, x: P.x, y: P.y, ph: 0, alive: true }); },
     rush() { combo = RUSH_EVERY - 1; rushNext = RUSH_EVERY; startRush(); combo = RUSH_EVERY; },
     bramble() { brambles.push({ bx: P.x, x: P.x, y: P.y - 5, amp: 0, ph: 0, sp: 0, alive: true, rot: 0 }); },
